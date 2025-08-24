@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoMo Bridge</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta property="og:title" content="MoMo Bridge — Pay global subscriptions with Mobile Money">
+  <meta property="og:type" content="website">
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#64748b; --bg:#f7f9fc; --card:#ffffff; --border:#e5e7eb;
+      --brand:#0ea5e9; --brand-2:#22d3ee; --ok:#16a34a; --warn:#b45309; --shadow:0 10px 30px rgba(2,8,20,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;line-height:1.45}
+    a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+    .nav{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,#0ea5e9,#22d3ee);color:#fff;box-shadow:var(--shadow)}
+    .nav-inner{max-width:1000px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .title{font-weight:800;font-size:18px;letter-spacing:.2px}
+    .brand .tag{opacity:.9;font-size:12px}
+    .nav a{color:#fff;opacity:.9;padding:6px 10px;border-radius:10px}
+    .nav a.active,.nav a:hover{opacity:1;background:rgba(255,255,255,.15)}
+    .wrap{max-width:1000px;margin:24px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    h1{font-size:22px;margin:0 0 8px}
+    h2{font-size:18px;margin:0 0 6px}
+    .muted{color:var(--muted);font-size:13px}
+    label{display:block;margin-top:10px;font-weight:600}
+    select,input,button{padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#fff;font:inherit}
+    button{background:var(--brand);color:#fff;font-weight:700;cursor:pointer;border:0;transition:transform .06s ease,filter .15s ease}
+    button:hover{filter:brightness(.95)} button:active{transform:translateY(1px)}
+    .btn-secondary{background:#0f172a0d;color:var(--ink);border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:10px 8px;border-bottom:1px solid #f1f5f9;text-align:left;vertical-align:middle}
+    th{background:#f8fafc;position:sticky;top:0;z-index:1}
+    .tag{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border);font-size:12px}
+    .kpi{font-size:32px;font-weight:800}
+    .status-paid{color:var(--ok);font-weight:700}
+    .status-pending{color:var(--warn);font-weight:700}
+    .badge{display:inline-block;padding:6px 12px;border-radius:20px;font-weight:600;font-size:12px;color:#fff;margin:0}
+    .badge.mtn{background:#ffcb05;color:#222}
+    .badge.airtel{background:#e60000}
+    .badge.netflix{background:#e50914}
+    .badge.youtube{background:#ff0000}
+    .badge.chatgpt{background:#10a37f}
+    .badge.x{background:#000000}
+    .foot{margin:28px 0 12px;color:var(--muted);font-size:12px;text-align:center}
+  </style>
+</head>
+<body>
+  <script>
+    // --- AUTH & CONFIG ---
+    const EXEC_URL = 'https://script.google.com/macros/s/AKfycbw5-x4zjc-bUP7eeQe3YlBE3i79ZuBHRcmruuqzNVwn_2r3Ovyd-pVOEMVywx22WUuG/exec';
+    const AUTH_USERNAME = sessionStorage.getItem('momo_admin_username');
+    const AUTH_PASSWORD = sessionStorage.getItem('momo_admin_password');
+    if (!AUTH_USERNAME || !AUTH_PASSWORD) {
+      window.location.href = 'login.html';
+    }
+
+    // --- HELPERS ---
+    function fmtUGX(n){ const num=Number(n||0); return Number.isNaN(num)?(n||"0"):num.toLocaleString(); }
+    function serviceBadge(s){
+      const map = {
+        'Netflix':'netflix', 'YouTube Premium':'youtube',
+        'ChatGPT Plus':'chatgpt', 'X':'x'
+      };
+      const cls = map[s] || '';
+      return cls ? `<span class="badge ${cls}">${s}</span>` : (s || '');
+    }
+    function providerBadge(p){
+      const map = { 'MTN MoMo':'mtn', 'AirtelPay':'airtel' };
+      const cls = map[p] || '';
+      return cls ? `<span class="badge ${cls}">${p}</span>` : (p || '');
+    }
+    function refLink(ref){ return `<a href="admin.html?ref=${encodeURIComponent(ref)}" target="_blank">Edit</a>`; }
+    function opsLogout() {
+      sessionStorage.removeItem('momo_admin_username');
+      sessionStorage.removeItem('momo_admin_password');
+      window.location.href = 'login.html';
+    }
+
+    // --- MAIN RENDER ---
+    function render(){
+      const svc = document.getElementById('serviceFilter').value;
+      loadData(svc);
+    }
+
+    async function loadData(serviceFilter){
+      try{
+        const params = new URLSearchParams({
+          action: 'getDashboardData',
+          username: AUTH_USERNAME,
+          password: AUTH_PASSWORD
+        });
+        const response = await fetch(EXEC_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: params
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+          alert("Failed to load dashboard: " + (result.error || "Unknown error"));
+          if (result.code === 'AUTH_FAILED') {
+            opsLogout();
+          }
+          return;
+        }
+        const rows = result.data;
+        const data = rows.filter(x => x.Name || x.Ref);
+        const filtered = serviceFilter ? data.filter(x => x.Service===serviceFilter) : data;
+        const q=(document.getElementById('searchBox').value||'').toLowerCase();
+        const searched = q ? filtered.filter(x =>
+          (x.Name||'').toLowerCase().includes(q) ||
+          (x.Phone||'').toLowerCase().includes(q) ||
+          (x.Ref||'').toLowerCase().includes(q)
+        ) : filtered;
+
+        const paid = searched.filter(x => String(x.Status).toLowerCase()==='paid');
+        const pending = searched.filter(x => String(x.Status).toLowerCase()!=='paid');
+
+        paid.sort((a,b)=>(b.PaidAt||'').localeCompare(a.PaidAt||''));
+        pending.sort((a,b)=>(b.Timestamp||'').localeCompare(a.Timestamp||''));
+
+        document.getElementById('kpiTotal').textContent = searched.length;
+        document.getElementById('kpiPending').textContent = pending.length;
+        document.getElementById('kpiPaid').textContent = paid.length;
+        const revenue = paid.reduce((sum,x)=> sum + (Number(x.AmountUGX)||0), 0);
+        document.getElementById('kpiRevenue').textContent = fmtUGX(revenue) + " UGX";
+        document.getElementById('updatedAt').textContent = "Updated: " + new Date().toLocaleString();
+
+        document.getElementById('pendingCount').textContent = pending.length;
+        document.getElementById('paidCount').textContent = paid.length;
+
+        const pBody = document.querySelector('#pendingTable tbody');
+        const dBody = document.querySelector('#paidTable tbody');
+        pBody.innerHTML=''; dBody.innerHTML='';
+
+        for (const x of pending){
+          const tr=document.createElement('tr');
+          tr.innerHTML = `
+            <td>${x.Timestamp||''}</td>
+            <td>${x.Name||''}</td>
+            <td>${x.Phone||''}</td>
+            <td>${serviceBadge(x.Service)}</td>
+            <td>${providerBadge(x.Provider)}</td>
+            <td>${fmtUGX(x.AmountUGX||0)}</td>
+            <td>${x.Ref?refLink(x.Ref):''}</td>`;
+          pBody.appendChild(tr);
+        }
+        for (const x of paid){
+          const tr=document.createElement('tr');
+          tr.innerHTML = `
+            <td>${x.PaidAt||''}</td>
+            <td>${x.Name||''}</td>
+            <td>${x.Phone||''}</td>
+            <td>${serviceBadge(x.Service)}</td>
+            <td>${providerBadge(x.Provider)}</td>
+            <td>${fmtUGX(x.AmountUGX||0)}</td>
+            <td>${x.Ref?refLink(x.Ref):''}</td>
+            <td>${x.TxnId||''}</td>`;
+          dBody.appendChild(tr);
+        }
+      }catch(e){
+        alert("Failed to load dashboard.\n" + e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('serviceFilter').addEventListener('change', render);
+      document.getElementById('searchBox').addEventListener('input', render);
+      document.getElementById('refreshBtn').addEventListener('click', render);
+      setInterval(render, 60000);
+      render();
+    });
+  </script>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d1f4ff"/></linearGradient></defs>
+        <rect x="8" y="8" width="48" height="48" rx="12" fill="url(#g)" opacity=".18"/>
+        <path d="M22 34c0-6 4-10 10-10s10 4 10 10-4 10-10 10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="26" cy="34" r="3" fill="#fff"/><circle cx="38" cy="34" r="3" fill="#fff"/>
+        </svg>
+        <div>
+          <div class="title">MoMo Bridge</div>
+          <div class="tag">Pay global subscriptions with Mobile Money</div>
+        </div>
+      </div>
+      <div class="links">
+        <a href="index.html" id="lnk-home">Home</a>
+        <a href="dashboard.html" id="lnk-dash" class="active">Dashboard</a>
+        <a href="admin.html" id="lnk-admin">Admin</a>
+        <a href="javascript:opsLogout()" class="btn-secondary" style="margin-left:8px">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <h1>Subscriptions Dashboard</h1>
+    <div class="muted">Live KPIs from your Google Sheet. Filter, search, confirm Paid.</div>
+
+    <div class="grid" style="margin-top:12px">
+      <div class="card"><div class="muted">Total Requests</div><div id="kpiTotal" class="kpi">—</div></div>
+      <div class="card"><div class="muted">Pending</div><div id="kpiPending" class="kpi status-pending">—</div></div>
+      <div class="card"><div class="muted">Paid</div><div id="kpiPaid" class="kpi status-paid">—</div></div>
+      <div class="card"><div class="muted">Paid Revenue (UGX)</div><div id="kpiRevenue" class="kpi">—</div></div>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <label>Service
+        <select id="serviceFilter">
+          <option value="">All</option>
+          <option>Netflix</option>
+          <option>YouTube Premium</option>
+          <option>ChatGPT Plus</option>
+        </select>
+      </label>
+      <input id="searchBox" placeholder="Search name/phone/ref" />
+      <button id="refreshBtn">Refresh</button>
+      <span class="muted" id="updatedAt"></span>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div><b>Pending</b> <span class="tag" id="pendingCount">0</span></div>
+        <div class="muted">Newest first</div>
+        <div style="max-height:45vh;overflow:auto;margin-top:8px">
+          <table id="pendingTable">
+            <thead><tr>
+              <th>When</th><th>Name</th><th>Phone</th><th>Service</th><th>Provider</th><th>Amount</th><th>Ref</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div><b>Paid</b> <span class="tag" id="paidCount">0</span></div>
+        <div class="muted">Newest first</div>
+        <div style="max-height:45vh;overflow:auto;margin-top:8px">
+          <table id="paidTable">
+            <thead><tr>
+              <th>PaidAt</th><th>Name</th><th>Phone</th><th>Service</th><th>Provider</th><th>Amount</th><th>Ref</th><th>TxnId</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoMo Bridge — Admin</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0ea5e9">
+
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#64748b; --bg:#f7f9fc; --card:#ffffff; --border:#e5e7eb;
+      --brand:#0ea5e9; --brand-2:#22d3ee; --ok:#16a34a; --warn:#b45309; --shadow:0 10px 30px rgba(2,8,20,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; line-height:1.45;
+    }
+
+    /* Top nav */
+    .nav{position:sticky;top:0;z-index:10;background:linear-gradient(90deg,#0ea5e9,#22d3ee);color:#fff;box-shadow:var(--shadow)}
+    .nav-inner{max-width:900px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .title{font-weight:800;font-size:18px}
+    .brand .tag{opacity:.9;font-size:12px}
+    .nav a{color:#fff;opacity:.9;padding:6px 10px;border-radius:10px}
+    .nav a.active,.nav a:hover{opacity:1;background:rgba(255,255,255,.15)}
+
+    /* Card */
+    .wrap{max-width:480px;margin:32px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    h2{margin-top:0;font-size:20px}
+    label{display:block;margin-top:12px;font-weight:600}
+    input,textarea,button{width:100%;padding:10px;margin-top:6px;border-radius:12px;border:1px solid var(--border);font:inherit}
+    textarea{resize:vertical}
+    button{background:var(--brand);color:#fff;font-weight:700;cursor:pointer;border:0;transition:filter .15s ease}
+    button:hover{filter:brightness(.95)}
+    .ok{margin-top:12px;color:var(--ok);font-weight:700}
+    .err{margin-top:12px;color:#c00;font-weight:700}
+
+    /* Badges */
+    .badge{display:inline-block;padding:6px 12px;border-radius:20px;font-weight:600;font-size:12px;color:#fff;margin:4px 4px 0 0}
+    .badge.mtn{background:#ffcb05;color:#222}
+    .badge.airtel{background:#e60000}
+    .badge.netflix{background:#e50914}
+    .badge.youtube{background:#ff0000}
+    .badge.chatgpt{background:#10a37f}
+    .badge.x{background:#000}
+
+    .foot{margin:28px 0 12px;color:var(--muted);font-size:12px;text-align:center}
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d1f4ff"/></linearGradient></defs>
+          <rect x="8" y="8" width="48" height="48" rx="12" fill="url(#g)" opacity=".18"/>
+          <path d="M22 34c0-6 4-10 10-10s10 4 10 10-4 10-10 10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="26" cy="34" r="3" fill="#fff"/><circle cx="38" cy="34" r="3" fill="#fff"/>
+        </svg>
+        <div>
+          <div class="title">MoMo Bridge</div>
+          <div class="tag">Admin Panel</div>
+        </div>
+      </div>
+      <div class="links">
+        <a href="index.html">Home</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="admin.html" class="active">Admin</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>Mark Payment as Paid</h2>
+      <label>Ref</label>
+      <input id="ref" placeholder="e.g. CP-250819123000-5600" required>
+
+      <label>Txn ID (optional)</label>
+      <input id="txn" placeholder="MoMo/Airtel TxnId">
+
+      <label>Note (optional)</label>
+      <textarea id="note" rows="2" placeholder="Any comment"></textarea>
+
+      <button id="markBtn">Mark Paid</button>
+      <button id="backBtn" type="button" style="margin-top:8px;background:#64748b">← Back to Dashboard</button>
+      <div id="msg"></div>
+    </div>
+  </div>
+
+  <div class="foot">© MoMo Bridge — Kampala, UG</div>
+
+<script>
+  const EXEC_URL = 'https://script.google.com/macros/s/AKfycbxmUIVaYhobHNDpNysr0X_lP5zPE_TOcP7VI4OHNLHjKljDrV5LPz_4bXT5K33mMCY/exec';
+
+  // Autofill Ref if opened from dashboard
+  const params = new URLSearchParams(location.search);
+  const qref = params.get('ref');
+  if (qref) document.getElementById('ref').value = qref;
+
+  document.getElementById('markBtn').addEventListener('click', async () => {
+    const ref  = document.getElementById('ref').value.trim();
+    const txn  = document.getElementById('txn').value.trim();
+    const note = document.getElementById('note').value.trim();
+    const msg  = document.getElementById('msg');
+
+    if(!ref){ msg.innerHTML = '<div class="err">Ref required</div>'; return; }
+
+    try{
+      await fetch(EXEC_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action: 'markAsPaid', ref, txnId: txn || '', note })
+      });
+      localStorage.setItem('refreshDash','1');
+      msg.innerHTML = '<div class="ok">Updated ✔</div>';
+    }catch(e){
+      msg.innerHTML = '<div class="err">Failed to update</div>';
+    }
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    window.location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>

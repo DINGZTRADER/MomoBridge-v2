@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoMo Bridge</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0ea5e9">
+  <meta property="og:title" content="MoMo Bridge — Pay global subscriptions with Mobile Money">
+  <meta property="og:type" content="website">
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#64748b; --bg:#f7f9fc; --card:#ffffff; --border:#e5e7eb;
+      --brand:#0ea5e9; --brand-2:#22d3ee; --ok:#16a34a; --warn:#b45309; --shadow:0 10px 30px rgba(2,8,20,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; line-height:1.45;
+    }
+    a{color:var(--brand); text-decoration:none} a:hover{text-decoration:underline}
+    .nav{
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(90deg, #0ea5e9, #22d3ee);
+      color:#fff; box-shadow:var(--shadow);
+    }
+    .nav-inner{
+      max-width:1000px; margin:0 auto; padding:10px 16px;
+      display:flex; align-items:center; gap:14px; justify-content:space-between;
+    }
+    .brand{display:flex; align-items:center; gap:10px}
+    .brand .title{font-weight:800; font-size:18px; letter-spacing:.2px}
+    .brand .tag{opacity:.9; font-size:12px}
+    .nav a{color:#fff; opacity:.9; padding:6px 10px; border-radius:10px}
+    .nav a.active, .nav a:hover{opacity:1; background:rgba(255,255,255,.15)}
+    .wrap{max-width:1000px; margin:24px auto; padding:0 16px}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px}
+    h1{font-size:22px; margin:0 0 8px}
+    h2{font-size:18px; margin:0 0 6px}
+    .muted{color:var(--muted); font-size:13px}
+    label{display:block; margin-top:10px; font-weight:600}
+    input, select, textarea, button{
+      width:100%; padding:10px 12px; margin-top:8px;
+      border-radius:12px; border:1px solid var(--border); background:#fff; font:inherit;
+    }
+    input:focus, select:focus, textarea:focus{
+      outline:3px solid #bae6fd; border-color:#7dd3fc;
+    }
+    button{
+      background:var(--brand); color:#fff; font-weight:700; cursor:pointer; border:0;
+      transition:transform .06s ease, filter .15s ease;
+    }
+    button:hover{filter:brightness(.95)}
+    button:active{transform:translateY(1px)}
+    .btn-secondary{background:#0f172a0d; color:var(--ink); border:1px solid var(--border)}
+    .badge { display:inline-block; padding:6px 12px; border-radius:20px;
+      font-weight:600; font-size:13px; color:#fff; margin:0 }
+    .badge.mtn {background:#ffcb05; color:#222}
+    .badge.airtel {background:#e60000}
+    .badge.netflix {background:#e50914}
+    .badge.youtube {background:#ff0000}
+    .badge.chatgpt {background:#10a37f}
+    .badge.x {background:#000000}
+    .badge-section{ margin:12px 0 6px }
+    .badge-section .label{ font-size:12px; font-weight:700; color:var(--muted);
+      letter-spacing:.3px; text-transform:uppercase; margin-bottom:6px; display:block }
+    .badge-wrap{ display:flex; flex-wrap:wrap; gap:8px }
+    .foot{margin:28px 0 12px; color:var(--muted); font-size:12px; text-align:center}
+    .confirmation {
+      margin-top:16px; padding:12px; background:#ecfdf5; border:1px solid #a7f3d0;
+      border-radius:12px; display:none
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+          <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#d1f4ff"/></linearGradient></defs>
+          <rect x="8" y="8" width="48" height="48" rx="12" fill="url(#g)" opacity=".18"/>
+          <path d="M22 34c0-6 4-10 10-10s10 4 10 10-4 10-10 10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="26" cy="34" r="3" fill="#fff"/><circle cx="38" cy="34" r="3" fill="#fff"/>
+        </svg>
+        <div>
+          <div class="title">MoMo Bridge</div>
+          <div class="tag">Pay global subscriptions with Mobile Money</div>
+        </div>
+      </div>
+      <div class="links">
+        <a href="index.html" id="lnk-home" class="active">Home</a>
+        <a href="dashboard.html" id="lnk-dash">Dashboard</a>
+        <a href="admin.html" id="lnk-admin">Admin</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>Pay for Your Subscription</h2>
+      <div class="badge-section">
+        <span class="label">Services</span>
+        <div class="badge-wrap">
+          <span class="badge netflix">Netflix</span>
+          <span class="badge youtube">YouTube Premium</span>
+          <span class="badge chatgpt">ChatGPT Plus</span>
+          <span class="badge x">X</span>
+        </div>
+      </div>
+      <div class="badge-section">
+        <span class="label">Payment Methods</span>
+        <div class="badge-wrap">
+          <span class="badge mtn" title="MTN Mobile Money">MTN MoMo</span>
+          <span class="badge airtel" title="Airtel Pay">AirtelPay</span>
+        </div>
+      </div>
+      <form id="subForm" style="margin-top:8px">
+        <label for="service">Choose Service</label>
+        <select id="service" required>
+          <option value="">-- Select --</option>
+          <option value="Netflix">Netflix</option>
+          <option value="YouTube Premium">YouTube Premium</option>
+          <option value="ChatGPT Plus">ChatGPT Plus</option>
+        </select>
+        <label for="provider">Payment Provider</label>
+        <select id="provider" required>
+          <option value="">-- Select --</option>
+          <option value="MTN MoMo">MTN MoMo</option>
+          <option value="AirtelPay">AirtelPay</option>
+        </select>
+        <label for="name">Your Name</label>
+        <input type="text" id="name" required />
+        <label for="phone">Your Phone Number</label>
+        <input type="tel" id="phone" required />
+        <button type="submit">Proceed to Pay</button>
+        <small class="muted">You will see the amount, pay number, and a unique reference after submitting.</small>
+      </form>
+      <div class="confirmation" id="confirmationBox"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("subForm");
+    const confirmation = document.getElementById("confirmationBox");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const serviceEl  = document.getElementById("service");
+      const providerEl = document.getElementById("provider");
+      const nameEl     = document.getElementById("name");
+      const phoneEl    = document.getElementById("phone");
+
+      const service  = serviceEl.value;
+      const provider = providerEl.value;
+      const name     = nameEl.value.trim();
+
+      let phone = phoneEl.value.trim().replace(/\D/g,'');
+      if (phone && phone[0] !== '0') phone = '0' + phone;
+
+      if (!service)  { alert("Please choose a service.");  serviceEl.focus();  return; }
+      if (!provider) { alert("Please choose a payment provider."); providerEl.focus(); return; }
+      if (!name)     { alert("Please enter your name.");  nameEl.focus();  return; }
+      if (!phone)    { alert("Please enter a valid phone number."); phoneEl.focus(); return; }
+
+      const payNumber = provider === "MTN MoMo" ? "0704650600" : "0774178738";
+      const amount = 0; // Placeholder, server must calculate actual amount
+
+      const last4 = phone.slice(-4) || "0000";
+      const stamp = new Date().toISOString().replace(/[-:T.Z]/g,'').slice(2,14);
+      const ref   = (service.split(' ').map(w=>w[0]).join('') + "-" + stamp + "-" + last4).toUpperCase();
+
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+
+      try {
+        // Use application/x-www-form-urlencoded to avoid CORS preflight
+        const params = new URLSearchParams({
+          name, phone, service, provider, ref, amount
+        });
+
+        const response = await fetch("https://script.google.com/macros/s/AKfycbxmUIVaYhobHNDpNysr0X_lP5zPE_TOcP7VI4OHNLHjKljDrV5LPz_4bXT5K33mMCY/exec", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: params
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          confirmation.innerHTML = `
+            ✅ Hi <b>${name}</b>, request received for <b>${service}</b> via <b>${provider}</b>.<br/>
+            Amount: <b>${result.amount ? result.amount.toLocaleString() : "..." } UGX</b><br/>
+            Pay to: <b id="payNum">${payNumber}</b> <button id="copyBtn" type="button" class="btn-secondary" style="width:auto;margin-left:6px">Copy</button><br/>
+            Your Ref: <b>${ref}</b> (include in payment note if possible)<br/><br/>
+            After payment you will be activated on <b>${phone}</b>.<br/>
+            <small class="muted">Server message: ${result.message || ""}</small>
+          `;
+          confirmation.style.backgroundColor = "#ecfdf5";
+          confirmation.style.borderColor = "#a7f3d0";
+        } else {
+          confirmation.innerHTML = `
+            ❌ Payment request failed.<br/>
+            Reason: <b>${result.error || "Unknown error"}</b><br/>
+            Please try again or contact support.<br/>
+            <small class="muted">Error code: ${result.code || "N/A"}</small>
+          `;
+          confirmation.style.backgroundColor = "#fee2e2";
+          confirmation.style.borderColor = "#fca5a5";
+        }
+      } catch (e) {
+        confirmation.innerHTML = `
+          ❌ An unexpected error occurred.<br/>
+          Please check your internet connection and try again.<br/>
+          <small class="muted">Details: ${e.message}</small>
+        `;
+        confirmation.style.backgroundColor = "#fee2e2";
+        confirmation.style.borderColor = "#fca5a5";
+      } finally {
+        confirmation.style.display = "block";
+      }
+
+      setTimeout(() => {
+        const copyBtn = document.getElementById('copyBtn');
+        const num = document.getElementById('payNum')?.textContent || payNumber;
+        copyBtn?.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(num); copyBtn.textContent = 'Copied'; }
+          catch { copyBtn.textContent = 'Copy failed'; }
+        });
+      }, 0);
+
+      form.reset();
+      setTimeout(()=>{ btn.disabled = false; btn.textContent = 'Proceed to Pay'; }, 1500);
+    });
+  </script>
+
+  <div class="foot">© MoMo Bridge — Kampala, UG</div>
+</body>
+</html>

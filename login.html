@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MoMo Bridge — Login</title>
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0ea5e9">
+
+  <style>
+    :root{
+      --ink:#0f172a; --muted:#64748b; --bg:#f7f9fc; --card:#ffffff; --border:#e5e7eb;
+      --brand:#0ea5e9; --brand-2:#22d3ee; --ok:#16a34a; --warn:#b45309; --shadow:0 10px 30px rgba(2,8,20,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--ink);
+      font-family:Inter,system-ui,Segoe UI,Arial,sans-serif; line-height:1.45;
+      display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh;
+    }
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px; max-width:400px; width:90%;}
+    h2{margin-top:0;font-size:20px; text-align:center;}
+    label{display:block;margin-top:12px;font-weight:600}
+    input,button{width:100%;padding:10px;margin-top:6px;border-radius:12px;border:1px solid var(--border);font:inherit}
+    button{background:var(--brand);color:#fff;font-weight:700;cursor:pointer;border:0;transition:filter .15s ease}
+    button:hover{filter:brightness(.95)}
+    .err{margin-top:12px;color:#c00;font-weight:700; text-align:center;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Admin Login</h2>
+    <form id="loginForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" required value="admin">
+      <label for="password">Password</label>
+      <input type="password" id="password" required value="password123">
+      <button type="submit" style="margin-top:20px;">Login</button>
+      <div id="msg" class="err"></div>
+    </form>
+  </div>
+
+  <script>            
+    const EXEC_URL = 'https://script.google.com/macros/s/AKfycbw5-x4zjc-bUP7eeQe3YlBE3i79ZuBHRcmruuqzNVwn_2r3Ovyd-pVOEMVywx22WUuG/exec';
+    const loginForm = document.getElementById('loginForm');
+    const msgDiv = document.getElementById('msg');
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msgDiv.textContent = ''; // Clear previous messages
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        // Use x-www-form-urlencoded to avoid CORS preflight
+        const params = new URLSearchParams({
+          action: 'login',
+          username: username,
+          password: password
+        });
+
+        const response = await fetch(EXEC_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: params
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          // Store credentials in sessionStorage (clears on tab close)
+          sessionStorage.setItem('momo_admin_username', username);
+          sessionStorage.setItem('momo_admin_password', password); // Not secure for production!
+
+          window.location.href = 'dashboard.html'; // Redirect to dashboard
+        } else {
+          msgDiv.textContent = result.error || 'Login failed. Please try again.';
+        }
+      } catch (error) {
+        console.error('Login fetch error:', error);
+        msgDiv.textContent = 'Network error or server unreachable.';
+      }
+    });
+  </script>
+</body>
